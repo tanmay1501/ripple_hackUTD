@@ -11,19 +11,23 @@ import pandas as pd
 app = Flask(__name__)
 CORS(app)
 
-PINATA_API_KEY = '8f4f1dbff9d81450db25'
-PINATA_API_SECRET = "d9d7a224c3031733b117e04bb31b70256218efe2ea344fd32cc8f8433c73e99b"
+PINATA_API_KEY = '8b59dd10a177b4181d4e'
+PINATA_API_SECRET = "515b0d4c7a4cbb190bfa1df4ab12e388917b7defc373115d404b94942e911f4f"
 
 #hash key list
-ipfs_hash = []
+
 target_column = "price"
 api = Api(app)
 
+@app.route('/api/data', methods=['GET'])
+def get_data():
+    data = {"message": "Hello from Flask!"}
+    return jsonify(data)
 # Upload the CSV file to Pinata
 @app.route('/upload_csv', methods=['POST'])
 def upload_csv_to_pinata():
     # Get the uploaded file
-    print(request.files)
+    
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
 
@@ -66,7 +70,7 @@ def get_csv_from_pinata(ipfs_hash):
 
 @app.route('/column_summary', methods=['POST'])
 def column_summary():
-    column_summary = []
+    column_summary = pd.DataFrame()
     # Get the uploaded file
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
@@ -78,10 +82,10 @@ def column_summary():
     # Save the file to the server
     file.save("data.csv")
     df = pd.read_csv("data.csv")
-    for i in df.columns:
-        print(i,df[i].dtype)
-        column_summary.append(get_column_summary(df[i],df[i].dtype))
-        
+
+ 
+    column_summary = get_column_summary(df)
+
     return jsonify(column_summary)
 
 #cleaning the data
@@ -113,12 +117,21 @@ def run_ml():
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
+    # Get the target column from the request (form or JSON)
+    target_column = request.form.get('target_column')
+    if not target_column:
+        return jsonify({"error": "No target column specified"}), 400
+
     # Save the file to the server
     file.save("data.csv")
     df = pd.read_csv("data.csv")
+
     # Run the ML pipeline
     model_comparison, feature_importance = run_ml_pipeline(df, target_column)
+    
+    # Return the results as JSON
     return jsonify({"model_comparison": model_comparison, "feature_importance": feature_importance})
+
 
 
 

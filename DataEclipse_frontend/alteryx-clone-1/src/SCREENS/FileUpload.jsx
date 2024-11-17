@@ -10,9 +10,10 @@ const CSVUploader = () => {
 }
 
 const handleFileChange = (e) => {
-  setFile(e.target.files[0]);
+  if (e.target.files && e.target.files[0]) {
+    setFile(e.target.files[0]); // Update the state with the selected file
+  }
 };
-
 const handleUpload = async () => {
   if (!file) {
     alert("Please select a file!");
@@ -23,13 +24,21 @@ const handleUpload = async () => {
   formData.append("file", file);
 
   try {
-    const response = await axios.post("http://localhost:5000/upload_csv", formData, {
+    // Replace with your Flask backend endpoint
+    const response = await axios.post("http://localhost:5000/upload_to_pinata", formData, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    setIpfsHash(response.data.ipfs_hash);
-    alert("File uploaded successfully!");
+
+    if (response.status === 200) {
+      const ipfsHash = response.data.ipfs_hash; // Assuming your Flask backend returns `ipfs_hash`
+      setIpfsHash(ipfsHash);
+      alert(`File uploaded successfully! IPFS Hash: ${ipfsHash}`);
+    } else {
+      alert("Failed to upload the file.");
+    }
   } catch (error) {
     console.error("Error uploading file:", error);
+    alert("An error occurred while uploading the file. Please try again.");
   }
 };
  
@@ -115,7 +124,7 @@ const UploadPage = ({ onPageChange }) => {
         ]
       }
     };
- 
+    console.log(typeof handleUpload);
     // Simulate processing time
     await new Promise(resolve => setTimeout(resolve, 3000));
     // Store results in localStorage or your preferred state management solution
@@ -157,14 +166,15 @@ const UploadPage = ({ onPageChange }) => {
 <input
               type="file"
               
-              onChange={(e) => e.target.files?.[0] && setFile(e.target.files[0])}
+              onChange={handleFileChange}
               // className="hidden"
               accept=".csv"
             />
+            
 <button
-                          onClick={() => {
-                            handleUpload()
-                          }}
+                          onClick={
+                            handleUpload
+                          }
               className="w-full max-w-xs bg-gradient-to-r from-blue-600 to-blue-900 text-white 
                        py-3 px-6 rounded-lg hover:from-blue-500 hover:to-blue-600 
                        transition-all transform hover:scale-105 shadow-lg ml-96"

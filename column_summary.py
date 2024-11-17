@@ -3,51 +3,45 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-def get_column_summary(column, dtype):
+def get_column_summary(df):
     """
     Get JSON-friendly summary statistics based on data type
     Returns: JSON formatted dictionary with counts of null, missing, valid values
     """
-    summary = {}
-    # Check if column has date or time in its name
-    if dtype in ['int', 'float', 'numeric','datetime64[ns]','int64','float64']:
-        summary = {
-            "name": column.name,
-            "type": "numeric",
-            "data_quality": {
-                "total_count": int(len(column)),
-                "null_count": int(column.isnull().sum()),
-                "valid_count": int(column.notnull().sum())
-            },
-            "statistics": {
-                "mean": float(column.mean()),
-                "std": float(column.std()),
-                "min": float(column.min()),
-                "max": float(column.max())
-            }
-        }
+    summary = pd.DataFrame()
+    summary_columns = ['name', 'type', 'total_count', 'null_count', 'valid_count', 'mean', 'std', 'min', 'max', 'num_catogories', 'categories', 'proportions']
+    summary = pd.DataFrame(columns=summary_columns)
+    print(df.describe())
+    for column in df.columns:
     
-
-    elif dtype in [ 'category', 'categorical','bool','str']:
-        summary = {
-            "name": column.name,
-            "type": "categorical",
-            "data_quality": {
-                "total_count": int(len(column)),
-                "null_count": int(column.isnull().sum()),
-                "valid_count": int(column.notnull().sum())
-            },
-            "statistics": {
-                "unique_count": int(column.nunique()),
-                "categories": {
-                    str(k): int(v) for k, v in column.value_counts().items()
-                },
-                "proportions": {
-                    str(k): float(v) for k, v in column.value_counts(normalize=True).items()
-                }
-            }
-        }
-    
+        # Check if column has date or time in its name
+        if column.dtype in ['int', 'float', 'numeric','datetime64[ns]','int64','float64']:
+            summary.append({
+                "name": column.name,
+                "type": "numeric",
+                    "total_count": int(len(column)),
+                    "null_count": int(column.isnull().sum()),
+                    "valid_count": int(column.notnull().sum()),
+                    "mean": float(column.mean()),
+                    "std": float(column.std()),
+                    "min": float(column.min()),
+                    "max": float(column.max())
+                
+            })
+        elif column.dtype in [ 'category', 'categorical','bool','str']:
+            summary.append({
+                "name": column.name,
+                "type": "categorical",
+                    "total_count": int(len(column)),
+                    "null_count": int(column.isnull().sum()),
+                    "valid_count": int(column.notnull().sum()),
+                    "num_catogories": int(column.nunique()),
+                    #add only first 4 categories
+                    "categories": list(column.unique()[:4]),
+                    #add only  highest 4 proportions
+                    "proportions": list(column.value_counts(normalize=True).values[:4])
+                    }
+            )
     return summary
 
 def plot_column_distribution(column, dtype):
