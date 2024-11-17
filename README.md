@@ -57,10 +57,12 @@ results, ensuring security, performance, and compliance at every stage of the da
      ```bash
      git checkout -b feature/YourFeatureName
   3. Commit your changes
+     ```bash
      git commit -m "Add some feature"
-  4. Push to Branch
+  5. Push to Branch
+     ```bash
      git push origin feature/YourFeatureName
-  5. Open a pull request
+  7. Open a pull request
      
 
      
